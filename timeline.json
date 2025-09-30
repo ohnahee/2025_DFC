@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "start": "2025-07-25T01:07:00",
+    "content": "응용 프로그램 설치",
+    "group": "System",
+    "evidence": "레지스트리 SOFTWARE/Amcache"
+  },
+  {
+    "id": 2,
+    "start": "2025-07-27T00:07:43",
+    "content": "Cursor IDE 실행",
+    "group": "Cursor",
+    "evidence": "Cursor logs"
+  },
+  {
+    "id": 3,
+    "start": "2025-07-27T07:07:49",
+    "content": "Cursor GitHub 인증 시도",
+    "group": "Cursor",
+    "evidence": "MFT/로그"
+  },
+  {
+    "id": 4,
+    "start": "2025-07-28T09:32:00",
+    "end": "2025-07-28T09:36:00",
+    "content": "Python 환경 설치",
+    "group": "Cursor",
+    "type": "range",
+    "evidence": "Cursor 로그"
+  },
+  {
+    "id": 5,
+    "start": "2025-07-28T09:35:27",
+    "content": "advanced_keylogger.py 작성",
+    "group": "Cursor",
+    "evidence": "Cursor DB/로그"
+  },
+  {
+    "id": 6,
+    "start": "2025-07-28T10:02:00",
+    "content": "Eraser.exe 실행 (증거인멸 시도)",
+    "group": "System",
+    "evidence": "Prefetch/레지스트리"
+  },
+  {
+    "id": 7,
+    "start": "2025-07-29T01:59:00",
+    "content": "port_scanner.py 생성",
+    "group": "Windsurf",
+    "evidence": "MFT + Export"
+  },
+  {
+    "id": 8,
+    "start": "2025-07-29T01:59:00",
+    "content": "example_usage.py 생성",
+    "group": "Windsurf",
+    "evidence": "MFT + Export"
+  },
+  {
+    "id": 9,
+    "start": "2025-07-29T01:59:00",
+    "content": "requirements.txt 생성",
+    "group": "Windsurf",
+    "evidence": "의존성: pynput, psutil"
+  },
+  {
+    "id": 10,
+    "start": "2025-07-29T01:59:00",
+    "content": "README/PORT_SCANNER_README 작성",
+    "group": "Windsurf",
+    "evidence": "문서"
+  }
+]

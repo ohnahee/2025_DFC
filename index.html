@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Forensic Timeline</title>
+  <link href="https://unpkg.com/vis-timeline@9.1.2/styles/vis-timeline-graph2d.min.css" rel="stylesheet" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #timeline { height: 600px; border: 1px solid #ccc; }
+    #controls { margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h2>디지털 포렌식 타임라인</h2>
+  <div id="controls">
+    <button id="loadData">타임라인 불러오기</button>
+    <select id="groupFilter"><option value="">All Groups</option></select>
+  </div>
+  <div id="timeline"></div>
+
+  <script src="https://unpkg.com/vis-data@7.1.2/peer/umd/vis-data.min.js"></script>
+  <script src="https://unpkg.com/vis-timeline@9.1.2/peer/umd/vis-timeline-graph2d.min.js"></script>
+  <script>
+    let items = new vis.DataSet([]);
+    let groups = new vis.DataSet([]);
+    const container = document.getElementById('timeline');
+    const timeline = new vis.Timeline(container, items, groups, { stack:false, zoomKey:'ctrlKey' });
+
+    function buildGroups(itemsArr) {
+      const seen = new Set(), groupsArr = [];
+      itemsArr.forEach(it => {
+        const g = it.group || "Unknown";
+        if (!seen.has(g)) { seen.add(g); groupsArr.push({id:g, content:g}); }
+      });
+      return groupsArr;
+    }
+
+    async function loadJSON() {
+      const res = await fetch("timeline.json");
+      const data = await res.json();
+      items.clear(); groups.clear();
+      items.add(data);
+      groups.add(buildGroups(data));
+      timeline.setGroups(groups);
+      populateGroupFilter(groups);
+    }
+
+    function populateGroupFilter(groupsDS) {
+      const sel = document.getElementById('groupFilter');
+      sel.innerHTML = '<option value="">All Groups</option>';
+      groupsDS.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g.id; opt.textContent = g.content;
+        sel.appendChild(opt);
+      });
+    }
+
+    document.getElementById('loadData').addEventListener('click', loadJSON);
+    document.getElementById('groupFilter').addEventListener('change', function() {
+      const v = this.value;
+      if (!v) { timeline.setItems(items); return; }
+      const subset = new vis.DataSet(items.get({ filter: it => it.group === v }));
+      timeline.setItems(subset);
+    });
+  </script>
+</body>
+</html>
