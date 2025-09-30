@@ -4,6 +4,9 @@
   <meta charset="utf-8" />
   <title>Forensic Timeline</title>
   <link href="https://unpkg.com/vis-timeline@9.1.2/styles/vis-timeline-graph2d.min.css" rel="stylesheet" />
+  
+  <script src="https://unpkg.com/vis-timeline@9.1.2/peer/umd/vis-timeline-graph2d.min.js"></script>
+
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     #timeline { height: 600px; border: 1px solid #ccc; }
@@ -18,10 +21,8 @@
   </div>
   <div id="timeline"></div>
 
-  
-  <script src="https://unpkg.com/vis-timeline@9.1.2/peer/umd/vis-timeline-graph2d.min.js"></script>
   <script>
-    // DOM이 완전히 로드된 후 스크립트를 실행하도록 수정
+    // DOM이 완전히 로드된 후 스크립트를 실행
     document.addEventListener('DOMContentLoaded', function() {
       let items = new vis.DataSet([]);
       let groups = new vis.DataSet([]);
@@ -38,37 +39,43 @@
       }
 
       async function loadJSON() {
-        const res = await fetch("./timeline.json");
-        if (!res.ok) {
-          console.error("timeline.json fetch error:", res.status);
-          return;
+        try {
+          const res = await fetch("./timeline.json");
+          if (!res.ok) {
+            console.error("timeline.json fetch error:", res.status);
+            alert("타임라인 데이터를 불러오는 데 실패했습니다. (HTTP 상태: " + res.status + ")");
+            return;
+          }
+          const data = await res.json();
+
+          items.clear(); 
+          groups.clear();
+
+          const mapped = data.map(ev => ({
+            id: ev.id,
+            start: ev.start,
+            end: ev.end,
+            content: ev.content,
+            group: ev.group,
+            type: ev.type,
+            title: ev.evidence ? "Evidence: " + ev.evidence : ""
+          }));
+
+          items.add(mapped);
+          groups.add(buildGroups(mapped));
+          timeline.setGroups(groups);
+          populateGroupFilter(groups);
+
+        } catch (error) {
+          console.error("데이터 처리 중 오류 발생:", error);
+          alert("타임라인 데이터를 처리하는 중 오류가 발생했습니다. timeline.json 파일 형식을 확인해주세요.");
         }
-        const data = await res.json();
-
-        items.clear(); 
-        groups.clear();
-
-        // evidence 필드를 tooltip(title)로 옮김
-        const mapped = data.map(ev => ({
-          id: ev.id,
-          start: ev.start,
-          end: ev.end,
-          content: ev.content,
-          group: ev.group,
-          type: ev.type,
-          title: ev.evidence ? "Evidence: " + ev.evidence : ""
-        }));
-
-        items.add(mapped);
-        groups.add(buildGroups(mapped));
-        timeline.setGroups(groups);
-        populateGroupFilter(groups);
       }
 
       function populateGroupFilter(groupsDS) {
         const sel = document.getElementById('groupFilter');
         sel.innerHTML = '<option value="">All Groups</option>';
-        groupsDS.forEach(g => {
+        groupsDS.get().forEach(g => { // .get()을 추가하여 배열로 변환
           const opt = document.createElement('option');
           opt.value = g.id; opt.textContent = g.content;
           sel.appendChild(opt);
@@ -78,9 +85,13 @@
       document.getElementById('loadData').addEventListener('click', loadJSON);
       document.getElementById('groupFilter').addEventListener('change', function() {
         const v = this.value;
-        if (!v) { timeline.setItems(items); return; }
-        const subset = new vis.DataSet(items.get({ filter: it => it.group === v }));
-        timeline.setItems(subset);
+        const allItems = items.get();
+        if (!v) {
+          timeline.setItems(allItems);
+        } else {
+          const filteredItems = allItems.filter(it => it.group === v);
+          timeline.setItems(new vis.DataSet(filteredItems));
+        }
       });
     });
   </script>
