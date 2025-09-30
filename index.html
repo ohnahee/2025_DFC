@@ -37,10 +37,28 @@
 
     async function loadJSON() {
       const res = await fetch("./timeline.json");
+      if (!res.ok) {
+        console.error("timeline.json fetch error:", res.status);
+        return;
+      }
       const data = await res.json();
-      items.clear(); groups.clear();
-      items.add(data);
-      groups.add(buildGroups(data));
+
+      items.clear(); 
+      groups.clear();
+
+      // evidence 필드를 tooltip(title)로 옮김
+      const mapped = data.map(ev => ({
+        id: ev.id,
+        start: ev.start,
+        end: ev.end,
+        content: ev.content,
+        group: ev.group,
+        type: ev.type,
+        title: ev.evidence ? "Evidence: " + ev.evidence : ""
+      }));
+
+      items.add(mapped);
+      groups.add(buildGroups(mapped));
       timeline.setGroups(groups);
       populateGroupFilter(groups);
     }
