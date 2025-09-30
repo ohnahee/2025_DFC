@@ -21,64 +21,67 @@
   <script src="https://unpkg.com/vis-data@7.1.2/peer/umd/vis-data.min.js"></script>
   <script src="https://unpkg.com/vis-timeline@9.1.2/peer/umd/vis-timeline-graph2d.min.js"></script>
   <script>
-    let items = new vis.DataSet([]);
-    let groups = new vis.DataSet([]);
-    const container = document.getElementById('timeline');
-    const timeline = new vis.Timeline(container, items, groups, { stack:false, zoomKey:'ctrlKey' });
+    // DOM이 완전히 로드된 후 스크립트를 실행하도록 수정
+    document.addEventListener('DOMContentLoaded', function() {
+      let items = new vis.DataSet([]);
+      let groups = new vis.DataSet([]);
+      const container = document.getElementById('timeline');
+      const timeline = new vis.Timeline(container, items, groups, { stack:false, zoomKey:'ctrlKey' });
 
-    function buildGroups(itemsArr) {
-      const seen = new Set(), groupsArr = [];
-      itemsArr.forEach(it => {
-        const g = it.group || "Unknown";
-        if (!seen.has(g)) { seen.add(g); groupsArr.push({id:g, content:g}); }
-      });
-      return groupsArr;
-    }
-
-    async function loadJSON() {
-      const res = await fetch("./timeline.json");
-      if (!res.ok) {
-        console.error("timeline.json fetch error:", res.status);
-        return;
+      function buildGroups(itemsArr) {
+        const seen = new Set(), groupsArr = [];
+        itemsArr.forEach(it => {
+          const g = it.group || "Unknown";
+          if (!seen.has(g)) { seen.add(g); groupsArr.push({id:g, content:g}); }
+        });
+        return groupsArr;
       }
-      const data = await res.json();
 
-      items.clear(); 
-      groups.clear();
+      async function loadJSON() {
+        const res = await fetch("./timeline.json");
+        if (!res.ok) {
+          console.error("timeline.json fetch error:", res.status);
+          return;
+        }
+        const data = await res.json();
 
-      // evidence 필드를 tooltip(title)로 옮김
-      const mapped = data.map(ev => ({
-        id: ev.id,
-        start: ev.start,
-        end: ev.end,
-        content: ev.content,
-        group: ev.group,
-        type: ev.type,
-        title: ev.evidence ? "Evidence: " + ev.evidence : ""
-      }));
+        items.clear(); 
+        groups.clear();
 
-      items.add(mapped);
-      groups.add(buildGroups(mapped));
-      timeline.setGroups(groups);
-      populateGroupFilter(groups);
-    }
+        // evidence 필드를 tooltip(title)로 옮김
+        const mapped = data.map(ev => ({
+          id: ev.id,
+          start: ev.start,
+          end: ev.end,
+          content: ev.content,
+          group: ev.group,
+          type: ev.type,
+          title: ev.evidence ? "Evidence: " + ev.evidence : ""
+        }));
 
-    function populateGroupFilter(groupsDS) {
-      const sel = document.getElementById('groupFilter');
-      sel.innerHTML = '<option value="">All Groups</option>';
-      groupsDS.forEach(g => {
-        const opt = document.createElement('option');
-        opt.value = g.id; opt.textContent = g.content;
-        sel.appendChild(opt);
+        items.add(mapped);
+        groups.add(buildGroups(mapped));
+        timeline.setGroups(groups);
+        populateGroupFilter(groups);
+      }
+
+      function populateGroupFilter(groupsDS) {
+        const sel = document.getElementById('groupFilter');
+        sel.innerHTML = '<option value="">All Groups</option>';
+        groupsDS.forEach(g => {
+          const opt = document.createElement('option');
+          opt.value = g.id; opt.textContent = g.content;
+          sel.appendChild(opt);
+        });
+      }
+
+      document.getElementById('loadData').addEventListener('click', loadJSON);
+      document.getElementById('groupFilter').addEventListener('change', function() {
+        const v = this.value;
+        if (!v) { timeline.setItems(items); return; }
+        const subset = new vis.DataSet(items.get({ filter: it => it.group === v }));
+        timeline.setItems(subset);
       });
-    }
-
-    document.getElementById('loadData').addEventListener('click', loadJSON);
-    document.getElementById('groupFilter').addEventListener('change', function() {
-      const v = this.value;
-      if (!v) { timeline.setItems(items); return; }
-      const subset = new vis.DataSet(items.get({ filter: it => it.group === v }));
-      timeline.setItems(subset);
     });
   </script>
 </body>
