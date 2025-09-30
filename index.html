@@ -36,7 +36,7 @@
     }
 
     async function loadJSON() {
-      const res = await fetch("timeline.json");
+      const res = await fetch("./timeline.json");
       const data = await res.json();
       items.clear(); groups.clear();
       items.add(data);
